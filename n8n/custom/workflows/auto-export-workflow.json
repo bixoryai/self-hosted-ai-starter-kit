@@ -1,0 +1,247 @@
+{
+  "id": "auto-export-monitor",
+  "name": "Auto-Export Workflow Monitor",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "resource": "workflows",
+        "operation": "getAll"
+      },
+      "id": "get-workflows",
+      "name": "Get All Workflows", 
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "credentials": {
+        "n8nApi": {
+          "id": "n8n-api-auth",
+          "name": "N8N API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-custom-workflows",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "srOnR8PAY3u4RSwb",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-non-demo",
+      "name": "Filter Non-Demo Workflows",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "resource": "workflows",
+        "operation": "get",
+        "workflowId": "={{ $json.id }}"
+      },
+      "id": "get-workflow-details",
+      "name": "Get Workflow Details",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "credentials": {
+        "n8nApi": {
+          "id": "n8n-api-auth",
+          "name": "N8N API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clean up workflow data for export\nconst workflow = $json;\n\n// Create clean copy\nconst cleanWorkflow = JSON.parse(JSON.stringify(workflow));\ndelete cleanWorkflow.versionId;\ndelete cleanWorkflow.updatedAt;\ndelete cleanWorkflow.createdAt;\n\n// Determine filename\nconst isAutoExportWorkflow = workflow.name === 'Auto-Export Workflow Monitor';\nconst filename = isAutoExportWorkflow ? 'auto-export-workflow.json' : `${workflow.id}.json`;\nconst content = JSON.stringify(cleanWorkflow, null, 2);\n\n// Convert content to binary data\nconst buffer = Buffer.from(content, 'utf8');\n\nreturn {\n  json: {\n    filename: filename,\n    workflowName: workflow.name,\n    workflowId: workflow.id\n  },\n  binary: {\n    data: {\n      data: buffer,\n      mimeType: 'application/json',\n      fileName: filename\n    }\n  }\n};"
+      },
+      "id": "prepare-export",
+      "name": "Prepare Export Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "fileName": "=/custom/workflows/{{ $json.filename }}",
+        "dataPropertyName": "data"
+      },
+      "id": "save-workflow-file",
+      "name": "Save Workflow File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "resource": "credentials",
+        "operation": "getAll"
+      },
+      "id": "get-credentials",
+      "name": "Get All Credentials",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [400, 500],
+      "credentials": {
+        "n8nApi": {
+          "id": "n8n-api-auth",
+          "name": "N8N API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process credentials for export\nconst credentials = $input.all();\nconst results = [];\n\nfor (const credential of credentials) {\n  const cred = credential.json;\n  \n  // Ensure we have valid credential data\n  if (!cred || !cred.id) {\n    continue;\n  }\n  \n  // Create filename\n  const credentialId = cred.id;\n  const filename = `${credentialId}.json`;\n  \n  // Clean up credential data (remove sensitive computed fields)\n  const cleanCred = {\n    id: cred.id,\n    name: cred.name,\n    type: cred.type,\n    data: cred.data || '{}' // Keep encrypted data as-is\n  };\n  \n  const content = JSON.stringify(cleanCred, null, 2);\n  const buffer = Buffer.from(content, 'utf8');\n  \n  results.push({\n    json: {\n      filename: filename,\n      credentialName: cred.name || 'Unnamed Credential',\n      credentialId: credentialId,\n      credentialType: cred.type\n    },\n    binary: {\n      data: {\n        data: buffer,\n        mimeType: 'application/json',\n        fileName: filename\n      }\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "prepare-credentials",
+      "name": "Prepare Credential Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 500]
+    },
+    {
+      "parameters": {
+        "fileName": "=/custom/credentials/{{ $json.filename }}",
+        "dataPropertyName": "data"
+      },
+      "id": "save-credential-file",
+      "name": "Save Credential File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [800, 500]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get All Workflows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get All Credentials",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Workflows": {
+      "main": [
+        [
+          {
+            "node": "Filter Non-Demo Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Non-Demo Workflows": {
+      "main": [
+        [
+          {
+            "node": "Get Workflow Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Workflow Details": {
+      "main": [
+        [
+          {
+            "node": "Prepare Export Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Export Data": {
+      "main": [
+        [
+          {
+            "node": "Save Workflow File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Workflow File": {
+      "main": [
+        []
+      ]
+    },
+    "Get All Credentials": {
+      "main": [
+        [
+          {
+            "node": "Prepare Credential Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Credential Data": {
+      "main": [
+        [
+          {
+            "node": "Save Credential File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Credential File": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1
+}
