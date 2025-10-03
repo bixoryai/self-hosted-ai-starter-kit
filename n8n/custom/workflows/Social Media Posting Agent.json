@@ -1,0 +1,557 @@
+{
+  "name": "Self-Hosted Automate Social Media Posts with Local AI Content and Images across Twitter, LinkedIn & Facebook",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Create Social Media Post",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Post Description",
+              "fieldType": "text",
+              "placeholder": "Describe what the post should be about (e.g., n8n automation tips, workflow best practices)",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "81d2b01a-b0a6-4361-9eb5-00251031a289",
+      "name": "Form Trigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        368,
+        240
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "messages": {
+          "values": [
+            {
+              "content": "=Based on this description: {{ $json['Post Description'] }}\n\nGenerate 5 different 50-character title suggestions for social media posts related to n8n or automation. Format as a numbered list:\n1. Title 1\n2. Title 2\n3. Title 3\n4. Title 4\n5. Title 5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5551acd6-a6d7-4c89-b7b8-104163d2c7a7",
+      "name": "Generate Title Suggestions",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "position": [
+        592,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "ollamaApi": {
+          "id": "xHuYe0MDGOs9IpBW",
+          "name": "Local Ollama service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Select a Title",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Title Suggestions",
+              "fieldType": "textarea",
+              "defaultValue": "={{ $json.message.content }}",
+              "requiredField": false,
+              "readOnly": true
+            },
+            {
+              "fieldLabel": "Selected Title",
+              "fieldType": "text",
+              "placeholder": "Copy and paste your chosen title here",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "title-selection-form",
+      "name": "Title Selection Form",
+      "type": "n8n-nodes-base.form",
+      "position": [
+        816,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "messages": {
+          "values": [
+            {
+              "content": "=Based on the title: {{ $json['Selected Title'] }}\nWrite a tweet that breaks this topic down.\n\nBe solution oriented and make it easily readable with easy vocabulary\n\nAdd some hashtags too "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f3c8267e-df8c-40d2-aa91-7fa21e2b30b0",
+      "name": "Generate Post Content",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "position": [
+        1040,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "ollamaApi": {
+          "id": "xHuYe0MDGOs9IpBW",
+          "name": "Local Ollama service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Review and Approve Post",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Generated Content",
+              "fieldType": "textarea",
+              "defaultValue": "={{ $json.message.content }}",
+              "requiredField": false,
+              "readOnly": true
+            },
+            {
+              "fieldLabel": "Edited Content",
+              "fieldType": "textarea",
+              "placeholder": "Edit the content if needed, or leave as is",
+              "defaultValue": "={{ $json.message.content }}",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Approve",
+              "fieldType": "boolean",
+              "defaultValue": true,
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "approval-form",
+      "name": "Approval Form",
+      "type": "n8n-nodes-base.form",
+      "position": [
+        1264,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "=Based on the title: {{ $json['Selected Title'] }}\nGenerate a japanese anime style image ",
+        "options": {}
+      },
+      "id": "0524af9f-0d39-4304-922d-a8c2807a9fa3",
+      "name": "Generate an image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1312,
+        496
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "ldnnvH1AW74k83Fk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U/edit?usp=drivesdk",
+          "cachedResultName": "Automation inbound content"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "Title": "={{ $json['Selected Title'] }}",
+            "Description": "={{ $json['Edited Content'] }}",
+            "Image": "={{ $json.imageUrl }}"
+          },
+          "schema": [
+            {
+              "id": "Title",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Title",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Description",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Description",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Image",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Title"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c836e49a-9d69-4e59-8a91-40a6c049dda6",
+      "name": "Append or update row in sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1312,
+        96
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "91OBthmqvZ3CU60O",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.twitterText }}",
+        "additionalFields": {}
+      },
+      "id": "34959513-e476-4956-bf7c-70c4d777e166",
+      "name": "Create Tweet",
+      "type": "n8n-nodes-base.twitter",
+      "position": [
+        1536,
+        304
+      ],
+      "typeVersion": 2,
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "REPLACE_TWITTER_CREDENTIAL_ID",
+          "name": "Twitter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.linkedinText }}",
+        "additionalFields": {}
+      },
+      "id": "637145e8-189d-46c6-be02-cfe000446da1",
+      "name": "Create a post",
+      "type": "n8n-nodes-base.linkedIn",
+      "position": [
+        1536,
+        96
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "REPLACE_LINKEDIN_CREDENTIAL_ID",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.facebookMessage }}",
+        "options": {
+          "link": "={{ $json.imageUrl }}"
+        }
+      },
+      "id": "40f14ed0-4935-43b0-9b8d-d11ef83a821c",
+      "name": "Facebook Graph API",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        1536,
+        496
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "REPLACE_FACEBOOK_CREDENTIAL_ID",
+          "name": "Facebook account"
+        }
+      }
+    }
+    ,
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json['Approve'] }}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "if-approved",
+      "name": "IF Approved",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1488,
+        240
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            {
+              "name": "twitterText",
+              "value": "={{ ($json['Edited Content'] || '').slice(0, 275) }}"
+            },
+            {
+              "name": "linkedinText",
+              "value": "={{ ($json['Edited Content'] || '') + ($json.imageUrl ? '\n' + $json.imageUrl : '') }}"
+            },
+            {
+              "name": "facebookMessage",
+              "value": "={{ ($json['Edited Content'] || '') + ($json.imageUrl ? '\n' + $json.imageUrl : '') }}"
+            }
+          ]
+        }
+      },
+      "id": "prepare-platform-texts",
+      "name": "Prepare Platform Texts",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1712,
+        240
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.imageUrl }}",
+        "responseFormat": "file",
+        "options": {},
+        "sendQuery": false,
+        "sendBinaryData": false,
+        "download": true
+      },
+      "id": "download-image",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1712,
+        496
+      ],
+      "typeVersion": 4
+    }
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            {
+              "name": "imageUrl",
+              "value": "={{ $json.data && $json.data[0] && $json.data[0].url ? $json.data[0].url : '' }}"
+            }
+          ]
+        }
+      },
+      "id": "extract-image-url",
+      "name": "Extract Image URL",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1504,
+        496
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "wait"
+      },
+      "id": "merge-content-image",
+      "name": "Merge Content + Image",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1504,
+        368
+      ],
+      "typeVersion": 2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Form Trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate Title Suggestions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Title Suggestions": {
+      "main": [
+        [
+          {
+            "node": "Title Selection Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Title Selection Form": {
+      "main": [
+        [
+          {
+            "node": "Generate Post Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Post Content": {
+      "main": [
+        [
+          {
+            "node": "Approval Form",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval Form": {
+      "main": [
+        [
+          {
+            "node": "IF Approved",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Content + Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Extract Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Image URL": {
+      "main": [
+        [
+          {
+            "node": "Merge Content + Image",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "IF Approved": {
+      "main": [
+        [
+          {
+            "node": "Prepare Platform Texts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Prepare Platform Texts": {
+      "main": [
+        [
+          {
+            "node": "Create Tweet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Content + Image": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "cf7a70f4-4619-4221-9280-541837fee5a2",
+  "meta": {
+    "templateId": "5841",
+    "instanceId": "af27709a1a48c28a7aebb0aa221f6e1be82d2c72862f11f5ec1d0974316f95c7"
+  },
+  "id": "fB61UhBMRQ3kCrUE",
+  "tags": []
+}

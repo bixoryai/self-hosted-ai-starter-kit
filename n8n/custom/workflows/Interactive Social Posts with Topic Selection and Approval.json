@@ -1,0 +1,564 @@
+{
+  "name": "Interactive Social Posts with Topic Selection and Approval",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Interactive flow:\n- Start at form: /form/social-topic-form (enter topic)\n- LLM returns 5 titles (JSON)\n- Pause: choose a title via Resume URL with {\"choice\":0..4}\n- Generate post + image\n- Pause: approve/edit via Resume URL with { approved: true, text?: string }\n- If approved: log to Google Sheets and post once to X/LinkedIn/Facebook.\n\nAssign credentials: OpenAI, Google Sheets, Twitter, LinkedIn, Facebook Graph API."
+      },
+      "id": "4f6a8d3b-5e2c-4a3b-9a1e-0c2d5f7a9b10",
+      "name": "Workflow Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        360,
+        -220
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "path": "social-topic-form",
+        "formTitle": "Daily Social Topic",
+        "formDescription": "Enter today's general topic for the posts.",
+        "fields": {
+          "values": [
+            {
+              "fieldLabel": "Topic",
+              "name": "topic",
+              "fieldType": "string",
+              "required": true
+            }
+          ]
+        }
+      },
+      "id": "7e3c6a2a-8a5d-4aa5-b0d6-b3f8a4e7c201",
+      "name": "Topic Input (Form)",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        360,
+        -40
+      ],
+      "typeVersion": 1,
+      "notesInFlow": true,
+      "notes": "Open in browser: /form/social-topic-form. Submitting provides { topic } to the flow."
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "niche",
+              "value": "automation"
+            },
+            {
+              "name": "audience",
+              "value": "solopreneurs"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c8f8f9f0-7c7d-4b41-ae8b-7b4f8a3e9a22",
+      "name": "Set Defaults",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        600,
+        -40
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chatgpt-4o-latest",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a helpful social media strategist. Based on the general topic: {{ $json.topic || ('a very specific problem in ' + $json.niche + ' for ' + $json.audience) }}, generate five distinct, attention-grabbing, 50-character titles. Return ONLY strict JSON in this shape: {\n  \"titles\": [\"title 1\", \"title 2\", \"title 3\", \"title 4\", \"title 5\"]\n}."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2a9f2bb-1c53-4d6b-a7da-1b2e7f2e9a33",
+      "name": "Generate 5 Titles",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        880,
+        -40
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "ldnnvH1AW74k83Fk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse JSON returned by the LLM to extract titles array.\nconst itemsOut = [];\nfor (const item of items) {\n  const content = item.message?.content || '';\n  let parsed = { titles: [] };\n  try {\n    parsed = JSON.parse(content);\n  } catch (e) {\n    // fallback: attempt to extract lines\n    const maybe = content.split('\n').map(l => l.replace(/^-\\s*/, '').trim()).filter(Boolean).slice(0,5);\n    parsed.titles = maybe;\n  }\n  itemsOut.push({ json: { titles: parsed.titles } });\n}\nreturn itemsOut;"
+      },
+      "id": "7b4d6d3d-0a3f-4a5a-8b8a-0f1b2e3c4d55",
+      "name": "Parse Titles JSON",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        1120,
+        -40
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "additionalFields": {}
+      },
+      "id": "2f9cda28-7e9f-4d9d-8e6d-2f69aa5b8b77",
+      "name": "Wait for Title Selection",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1360,
+        -40
+      ],
+      "typeVersion": 1,
+      "notesInFlow": true,
+      "notes": "Pause. Use the Resume URL and POST { \"choice\": 0..4 } to select a title."
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "id": "8b2b2f83-5a57-4b2c-8f66-62b3b0a7d611",
+      "name": "Merge Titles + Choice",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1600,
+        -40
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "functionCode": "// Pick selected title by index from resume payload { choice: 0..4 }\nreturn items.map((item) => {\n  const titles = item.json.titles || item[\"Input 1\"]?.json?.titles || [];\n  const choice = item[\"Input 2\"]?.json?.choice ?? item.json.choice ?? 0;\n  const idx = Math.max(0, Math.min(4, Number(choice)));\n  const selectedTitle = titles[idx] || titles[0] || '';\n  return { json: { selectedTitle, titles } };\n});"
+      },
+      "id": "e0d4a1a1-42ab-4f0d-8c7e-9e9f0b3d7a21",
+      "name": "Select Title",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        1840,
+        -40
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chatgpt-4o-latest",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Write a concise, solution-oriented social post based on the title: \n\n\"{{ $json.selectedTitle }}\"\n\nUse simple language, add relevant hashtags, keep under 280 characters. Return only the text of the post."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cf44a0e9-6ef1-4b13-8d98-ef6cd2e91b85",
+      "name": "Generate Post Text",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        2080,
+        -40
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "ldnnvH1AW74k83Fk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "=Generate a Japanese anime style image based on the title: {{ $json.selectedTitle }}",
+        "options": {}
+      },
+      "id": "ab9acb40-0a1d-4f63-a3c0-3d73b3424c3f",
+      "name": "Generate Image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        2080,
+        200
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "ldnnvH1AW74k83Fk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "additionalFields": {}
+      },
+      "id": "5ad2c6a5-0c7d-4b5e-9b86-4d6a8b0c9e31",
+      "name": "Wait for Approval / Edit",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        2320,
+        -40
+      ],
+      "typeVersion": 1,
+      "notesInFlow": true,
+      "notes": "Pause. Use Resume URL and POST { approved: true, text?: string } or { approved: false }."
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "id": "bb3f7488-f2c5-4b69-8d76-0bca0f1e88f9",
+      "name": "Merge Post + Approval",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2560,
+        -40
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "functionCode": "// Build final text: prefer user edits from approval payload { approved, text }\nreturn items.map((item) => {\n  const postText = item[\"Input 1\"]?.json?.message?.content || item.json?.message?.content || '';\n  const approval = item[\"Input 2\"]?.json || {};\n  const approved = Boolean(approval.approved);\n  const finalText = (approval.text && String(approval.text).trim().length > 0) ? approval.text : postText;\n  return { json: { approved, finalText } };\n});"
+      },
+      "id": "9f7b3a26-1d67-4a66-9e0d-29b39c2ba5cc",
+      "name": "Finalize Post Text",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        2800,
+        -40
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.approved }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "6b0a6a1f-0d23-4c77-8b9a-81e8a1b49c44",
+      "name": "IF Approved?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        3040,
+        -40
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U/edit?usp=drivesdk",
+          "cachedResultName": "Automation inbound content"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "Title": "={{ $json.selectedTitle }}",
+            "Description": "={{ $json.finalText }}"
+          },
+          "schema": [
+            {
+              "id": "Title",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Title",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Description",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Description",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Image",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Title"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b7e01a79-2f66-4e70-9e1e-9fbd9c7b2a18",
+      "name": "Append or Update Row (Sheet1)",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        3280,
+        -200
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "91OBthmqvZ3CU60O",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.finalText }}",
+        "additionalFields": {}
+      },
+      "id": "6a89ee9f-2c8c-4f52-8f5e-0c7d5a4a2f2e",
+      "name": "Create Tweet",
+      "type": "n8n-nodes-base.twitter",
+      "position": [
+        3520,
+        -200
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "id": "0c2d1a8e-5f7a-4c32-9f9c-0a7b3d8f5a11",
+      "name": "Create LinkedIn Post",
+      "type": "n8n-nodes-base.linkedIn",
+      "position": [
+        3520,
+        -40
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b0c3f7a1-3e47-4f5f-9c3a-9e1b7a2c4d50",
+      "name": "Facebook Graph API",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        3520,
+        120
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Topic Input (Form)": {
+      "main": [
+        [
+          {
+            "node": "Set Defaults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Defaults": {
+      "main": [
+        [
+          {
+            "node": "Generate 5 Titles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate 5 Titles": {
+      "main": [
+        [
+          {
+            "node": "Parse Titles JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Titles JSON": {
+      "main": [
+        [
+          {
+            "node": "Wait for Title Selection",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Titles + Choice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Title Selection": {
+      "main": [
+        [
+          {
+            "node": "Merge Titles + Choice",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Titles + Choice": {
+      "main": [
+        [
+          {
+            "node": "Select Title",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Title": {
+      "main": [
+        [
+          {
+            "node": "Generate Post Text",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Post Text": {
+      "main": [
+        [
+          {
+            "node": "Wait for Approval / Edit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Post + Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Approval / Edit": {
+      "main": [
+        [
+          {
+            "node": "Merge Post + Approval",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Post + Approval": {
+      "main": [
+        [
+          {
+            "node": "Finalize Post Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Post Text": {
+      "main": [
+        [
+          {
+            "node": "IF Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Approved?": {
+      "main": [
+        [
+          {
+            "node": "Append or Update Row (Sheet1)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Tweet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create LinkedIn Post",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "5a2d9b3e-7c6d-4f2f-9a3b-2f1d7c5a6b4e",
+  "meta": {
+    "templateId": "",
+    "instanceId": ""
+  },
+  "id": "iNTERACTIVE_SOCIAL_POSTS_V1",
+  "tags": []
+}
+
+

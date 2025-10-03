@@ -45,6 +45,8 @@ cd self-hosted-ai-starter-kit
 cp .env.example .env # you should update secrets and passwords inside
 ```
 
+> See also: [Project Rules for Nvidia GPU on Windows](PROJECT_RULES.md)
+
 ### Running n8n using Docker Compose
 
 #### For Nvidia GPU users
@@ -109,6 +111,13 @@ cd self-hosted-ai-starter-kit
 cp .env.example .env # you should update secrets and passwords inside
 docker compose --profile cpu up
 ```
+
+### Demo data import (first run)
+
+By default, the demo auto-import service is commented out in `docker-compose.yml` to avoid re-importing on every restart.
+
+- To load the demo workflow and credentials on your first run, temporarily uncomment the `n8n-import` service and its dependency under the `n8n` service, then start the stack. After the first successful launch, comment it out again.
+- Manual imports are always available from the n8n UI, and your edits are stored in PostgreSQL.
 
 ## ⚡️ Quick start and usage
 
