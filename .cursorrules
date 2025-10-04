@@ -1,0 +1,65 @@
+# Cursor Rules for Self-Hosted AI Starter Kit
+
+## Project Context
+This is a local n8n-based AI workflow automation environment running on Windows 10/11 with Nvidia GPU support using Docker.
+
+## Technology Stack
+- **n8n**: Low-code workflow automation platform (Port 5678)
+- **Ollama**: Local LLM inference with GPU acceleration (Port 11434)
+- **Qdrant**: Vector database for embeddings (Port 6333)
+- **PostgreSQL**: Persistent storage for workflows (Port 5432)
+- **Docker Compose**: Container orchestration with gpu-nvidia profile
+
+## Key Configuration Details
+- **Ollama in n8n**: Use `http://ollama:11434` for Docker Ollama OR `http://host.docker.internal:11434` for host Ollama
+- **Shared Files**: Use `/data/shared` path inside n8n (maps to `./shared` locally)
+- **GPU Setup**: Nvidia GPU with Docker Desktop + WSL2 backend required
+- **Database**: PostgreSQL connection: `postgres://n8ndb@127.0.0.1:5432`
+
+## Development Commands
+- Start stack: `docker compose --profile gpu-nvidia up`
+- Upgrade: `docker compose --profile gpu-nvidia pull`
+- Check containers: `docker ps`
+- View n8n logs: `docker logs n8n --since 10m`
+- List Ollama models: `docker exec ollama ollama list`
+
+## File Organization
+- `/n8n/custom/workflows/`: Custom n8n workflow JSON files
+- `/n8n/custom/credentials/`: Custom credential configs
+- `/shared/`: Files accessible from n8n workflows
+- `workflow-build-plan.md`: Tracking document for all workflows
+- `PROJECT_RULES.md`: Windows + Nvidia GPU specific setup guide
+
+## Coding Preferences
+- Keep explanations beginner-friendly and concise
+- Always test changes in small increments
+- Document workflows in workflow-build-plan.md
+- Use smaller LLM models (2-4GB) due to ~7-8GB RAM constraint
+- Prefer local/free solutions over paid APIs
+
+## Common Tasks
+- **Import workflow**: n8n UI → Workflows → Import from file
+- **Test Ollama**: `docker exec ollama ollama list`
+- **Query database**: Use PostgreSQL MCP server
+- **Check credentials**: n8n UI → Settings → Credentials
+
+## Known Issues & Solutions
+- **Memory constraint**: Use models like llama3.2:1b, qwen2.5:3b, phi3:mini (not 8B models)
+- **Tool schema errors**: Ensure ✨ sparkle icons enabled on tool parameters
+- **Date parsing**: AI agents need ISO 8601 format examples in tool descriptions
+- **Credential errors**: Re-authenticate OAuth credentials if "Forbidden" errors occur
+
+## AI Workflow Best Practices
+- Start with simple chatbots before adding tools
+- Test tools individually before connecting to agents
+- Use fixed parameters first, then add AI-generated params
+- Add clear tool descriptions with parameter examples
+- Keep memory context window reasonable (10-20 messages)
+
+## Learning Focus
+User is a beginner learning AI workflow automation - prioritize:
+1. Understanding over speed
+2. Working examples over complex features
+3. Step-by-step guidance
+4. Troubleshooting with clear explanations
+
