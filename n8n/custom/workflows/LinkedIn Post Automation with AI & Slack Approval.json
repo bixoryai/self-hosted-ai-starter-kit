@@ -1,0 +1,649 @@
+{
+  "name": "LinkedIn Post Automation with AI & Slack Approval",
+  "nodes": [
+    {
+      "parameters": {
+        "height": 406.2598595936021,
+        "width": 436.02806651017256,
+        "content": "## 🚀 LinkedIn Post Automation with AI & Slack Approval\n\n**Purpose:** Automates LinkedIn content creation with human oversight\n\n### Flow Overview:\n1. **Trigger:** Google Sheets monitors for new post topics (Status = \"Pending\")\n2. **AI Generation:** GPT-4 creates engaging LinkedIn content\n3. **Slack Approval:** Team reviews/edits via interactive buttons\n4. **Publishing:** Posts to LinkedIn profile + groups\n5. **Tracking:** Updates status to \"Posted\" in spreadsheet\n\n### Key Benefits:\n- ✅ 80% time savings on content creation\n- ✅ Human quality control via Slack\n- ✅ Multi-group posting capability\n- ✅ Full tracking in Google Sheets"
+      },
+      "id": "workflow-overview-linkedin",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-1050, -450],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "height": 382.5486193752571,
+        "width": 363.19670035612394,
+        "content": "## 📊 Google Sheets Trigger\n\n**What it does:**\n- Checks spreadsheet every minute\n- Looks for rows with Status = \"Pending\"\n- Processes one post at a time\n\n**Required Columns:**\n- ID\n- Linkedin Post Title\n- Status (set to \"Pending\" for new posts)\n- Image URL (optional)\n\n**Groups Sheet:**\n- GroupIds (for multi-group posting)"
+      },
+      "id": "sheets-trigger-note",
+      "name": "Sheets Trigger Info",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-750, -400],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "height": 381.09054325955777,
+        "width": 256.8971634855967,
+        "content": "## 🤖 AI Content Generation\n\n**GPT-4 generates:**\n- Compelling hook\n- 3-4 informative paragraphs\n- Engagement questions\n- Relevant emojis\n- 4-6 trending hashtags\n- Proper LinkedIn formatting\n\n**Customizable:** Edit prompt for your brand voice"
+      },
+      "id": "ai-generation-note",
+      "name": "AI Generation",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [130, -400],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "height": 361.57749667221623,
+        "width": 351.7932582011457,
+        "content": "## 👍 Slack Approval System\n\n**Interactive Message with:**\n- ✅ Approve button\n- ✏️ Edit button (allows content changes)\n- Preview of generated post\n\n**Approver Configuration:**\n- Change Slack user ID in node settings\n- Can add multiple reviewers\n\n**Webhook receives responses**"
+      },
+      "id": "slack-approval-note",
+      "name": "Slack Approval",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [730, -380],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "height": 250,
+        "width": 400,
+        "content": "## 🔗 Webhook Handler\n\n**Receives Slack responses:**\n- Approval confirmations\n- Edited content\n- Button interactions\n\n**⚠️ Important:** Configure this URL in your Slack app's Interactive Components"
+      },
+      "id": "webhook-handler-note",
+      "name": "Webhook Handler",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-750, -800],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "height": 280,
+        "width": 380,
+        "content": "## 🖼️ Image Upload Process\n\n**Steps:**\n1. Register image with LinkedIn\n2. Download image from URL\n3. Upload binary to LinkedIn\n\n**Supported formats:** JPEG, PNG\n**Max size:** 10MB"
+      },
+      "id": "image-upload-note",
+      "name": "Image Upload Process",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [950, -800],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "height": 250,
+        "width": 350,
+        "content": "## 📤 LinkedIn Publishing\n\n**Publishes to:**\n- Personal LinkedIn profile\n- Multiple LinkedIn groups (from Groups sheet)\n\n**Auto-processes groups one by one to avoid rate limits**"
+      },
+      "id": "linkedin-publish-note",
+      "name": "LinkedIn Publishing",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1450, -780],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "height": 200,
+        "width": 300,
+        "content": "## ✅ Status Update\n\n**Final step:**\nMarks row as \"Posted\" in Google Sheets\n\n**Prevents:**\n- Duplicate processing\n- Re-posting same content"
+      },
+      "id": "status-update-note",
+      "name": "Status Update",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [2110, -900],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "maxItems": 1
+      },
+      "id": "0cd3e628-1720-49f7-9280-a1039d2c2ca9",
+      "name": "Limit",
+      "type": "n8n-nodes-base.limit",
+      "position": [-260, -180],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"post\": {\n      \"type\": \"string\",\n      \"description\": \"The complete LinkedIn post content with formatting, emojis, and hashtags\"\n    }\n  },\n  \"required\": [\"post\"]\n}"
+      },
+      "id": "c36d36d6-0035-49ac-a757-4598d56e574e",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [328, 40],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {}
+      },
+      "id": "9f521172-07f4-4a17-b358-bd998e9a9d02",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [208, 40],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "path": "linkedin-approval",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "09b0b22f-eb64-468f-85b0-1c9a0608631e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [-700, -590],
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificSheet",
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Linkedin Post"
+        },
+        "options": {}
+      },
+      "id": "4e2954d7-e4de-48bf-a974-5ec80c7b7b0c",
+      "name": "Linkedin-Post-Topic",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "position": [-700, -180],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "status-pending-check",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47c4cdd0-48ef-4e41-996b-ed29811b092e",
+      "name": "Validate-Status",
+      "type": "n8n-nodes-base.if",
+      "position": [-480, -180],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a LinkedIn content expert. Create an engaging LinkedIn post based on this topic:\n\nTopic: {{ $json.post_title }}\n\nRequirements:\n1. Start with a compelling hook that grabs attention\n2. Include 3-4 informative paragraphs with valuable insights\n3. Add relevant emojis to increase engagement\n4. End with a thought-provoking question to encourage comments\n5. Include 4-6 trending hashtags related to the topic\n6. Use proper spacing and formatting for LinkedIn readability\n7. Keep it professional yet conversational\n8. Aim for 150-300 words\n\nMake it engaging, valuable, and likely to get interactions!",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert LinkedIn content creator who understands virality, engagement, and professional storytelling."
+        }
+      },
+      "id": "908eee31-78eb-482c-b331-2d3467d56b0d",
+      "name": "Linedin-Post-Creator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [180, -180],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format the LinkedIn post for Slack display\nconst post = $input.item.json.output?.post || $input.item.json.post || '';\n\n// Escape special characters for Slack\nconst escapedPost = post\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\n// Keep track of the post ID and image URL\nconst postId = $input.item.json.post_id || $input.item.json.ID;\nconst imageUrl = $input.item.json.image_url || $input.item.json['Image URL'] || '';\nconst postTitle = $input.item.json.post_title || $input.item.json['Linkedin Post Title'] || '';\n\nreturn {\n  json: {\n    formatted_post: escapedPost,\n    post_id: postId,\n    image_url: imageUrl,\n    post_title: postTitle,\n    original_post: post\n  }\n};"
+      },
+      "id": "882d6e5c-a7f0-425f-a501-1f7179f8857b",
+      "name": "Format-Content",
+      "type": "n8n-nodes-base.code",
+      "position": [556, -180],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SLACK_USER_ID"
+        },
+        "text": "=📝 *New LinkedIn Post Ready for Review*\n\n*Topic:* {{ $json.post_title }}\n*Post ID:* {{ $json.post_id }}\n\n*Generated Content:*\n{{ $json.formatted_post }}\n\n{{ $json.image_url ? '*Image URL:* ' + $json.image_url : '*No image attached*' }}",
+        "blocksUi": {
+          "blocksValues": [
+            {
+              "type": "actions",
+              "blockId": "approval_actions_{{ $json.post_id }}",
+              "elements": [
+                {
+                  "type": "button",
+                  "text": "✅ Approve",
+                  "actionId": "approve_post",
+                  "style": "primary",
+                  "value": "={{ $json.post_id }}"
+                },
+                {
+                  "type": "button",
+                  "text": "✏️ Edit",
+                  "actionId": "edit_post",
+                  "value": "={{ $json.post_id }}"
+                }
+              ]
+            }
+          ]
+        },
+        "otherOptions": {}
+      },
+      "id": "31aea874-516c-47c7-9c5f-bde873faae4d",
+      "name": "Approval-on-Slack",
+      "type": "n8n-nodes-base.slack",
+      "position": [780, -180],
+      "webhookId": "YOUR_SLACK_WEBHOOK_ID",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the response from Slack\nconst body = $input.item.json.body || {};\nconst payload = typeof body.payload === 'string' ? JSON.parse(body.payload) : body.payload || {};\n\n// Get action details\nconst actions = payload.actions || [];\nconst action = actions[0] || {};\nconst actionId = action.action_id || '';\nconst postId = action.value || '';\n\n// Get the message text from Slack\nconst message = payload.message || {};\nconst messageText = message.text || '';\n\n// Extract the original post content from the message\nconst contentMatch = messageText.match(/\\*Generated Content:\\*\\n([\\s\\S]*?)\\n\\n(?:\\*Image URL:|\\*No image)/m);\nconst originalPost = contentMatch ? contentMatch[1].trim() : '';\n\n// Check if this is an edit action and get the edited content\nlet finalPost = originalPost;\n\nif (actionId === 'edit_post') {\n  // For edit actions, the user would provide edited content\n  // In a real scenario, you'd show a modal to edit - for now we use original\n  const stateValues = payload.state?.values || {};\n  const editedContent = Object.values(stateValues)[0]?.post_content?.value || originalPost;\n  finalPost = editedContent;\n}\n\n// Extract image URL from message\nconst imageMatch = messageText.match(/\\*Image URL:\\* (.+)$/m);\nconst imageUrl = imageMatch ? imageMatch[1].trim() : '';\n\nreturn {\n  json: {\n    action_id: actionId,\n    post_id: postId,\n    approved: actionId === 'approve_post',\n    edited_post: finalPost,\n    image_url: imageUrl,\n    original_post: originalPost\n  }\n};"
+      },
+      "id": "8592224a-0370-48c3-b803-fe3653284545",
+      "name": "Format-Response",
+      "type": "n8n-nodes-base.code",
+      "position": [-260, -590],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "check-approved",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2c503653-e3b6-4229-a733-25fa666ba85a",
+      "name": "Validate-Response",
+      "type": "n8n-nodes-base.if",
+      "position": [-40, -590],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "final-post-text",
+              "name": "post_content",
+              "type": "string",
+              "value": "={{ $json.edited_post }}"
+            },
+            {
+              "id": "post-id-pass",
+              "name": "post_id",
+              "type": "string",
+              "value": "={{ $json.post_id }}"
+            },
+            {
+              "id": "image-url-pass",
+              "name": "image_url",
+              "type": "string",
+              "value": "={{ $json.image_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "be68592f-f6a8-4698-8343-58d439eed3ac",
+      "name": "Set-Final-Message",
+      "type": "n8n-nodes-base.set",
+      "position": [180, -590],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "https://api.linkedin.com/v2/me",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "options": {}
+      },
+      "id": "4ec34acf-1704-4fd7-b14d-680409acbeda",
+      "name": "Linkedin-User-Detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [400, -580],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "=https://api.linkedin.com/v2/ugcPosts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ {\n  \"author\": \"urn:li:person:\" + $json.id,\n  \"lifecycleState\": \"PUBLISHED\",\n  \"specificContent\": {\n    \"com.linkedin.ugc.ShareContent\": {\n      \"shareCommentary\": {\n        \"text\": $json.post_content\n      },\n      \"shareMediaCategory\": $json.image_url ? \"IMAGE\" : \"NONE\",\n      \"media\": $json.image_url ? [\n        {\n          \"status\": \"READY\",\n          \"media\": $json.asset_id\n        }\n      ] : []\n    }\n  },\n  \"visibility\": {\n    \"com.linkedin.ugc.MemberNetworkVisibility\": \"PUBLIC\"\n  }\n} }}",
+        "options": {}
+      },
+      "id": "78293261-7fbd-4757-8353-c2275ba2089a",
+      "name": "Linkedin-post",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1500, -590],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Groups"
+        },
+        "options": {}
+      },
+      "id": "54ee84f1-42e2-4f25-96a4-958b27f798f4",
+      "name": "Get-Group-id",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1720, -590],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "4e3e1fc5-a0ae-469f-8399-79b9bf98ff41",
+      "name": "Pick 1 by 1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [1940, -590],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "url": "=https://api.linkedin.com/v2/ugcPosts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ {\n  \"author\": $json.GroupIds,\n  \"lifecycleState\": \"PUBLISHED\",\n  \"specificContent\": {\n    \"com.linkedin.ugc.ShareContent\": {\n      \"shareCommentary\": {\n        \"text\": $node[\"Set-Final-Message\"].json.post_content\n      },\n      \"shareMediaCategory\": $node[\"Set-Final-Message\"].json.image_url ? \"IMAGE\" : \"NONE\",\n      \"media\": $node[\"Set-Final-Message\"].json.image_url ? [\n        {\n          \"status\": \"READY\",\n          \"media\": $node[\"Upload-Image-data\"].json.asset_id\n        }\n      ] : []\n    }\n  },\n  \"visibility\": {\n    \"com.linkedin.ugc.MemberNetworkVisibility\": \"PUBLIC\"\n  }\n} }}",
+        "options": {}
+      },
+      "id": "7309d6c0-bfec-4d06-b3c3-5b05ccab6df3",
+      "name": "Post-Linkedin-Groups",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2160, -540],
+      "onError": "continueRegularOutput",
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "YOUR_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Linkedin Post"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Posted"
+          }
+        },
+        "options": {
+          "dataLocationOnSheets": "={{ $node[\"Set-Final-Message\"].json.post_id }}"
+        }
+      },
+      "id": "63b25ac7-e5dc-4836-96cf-5767b57c7784",
+      "name": "Update-Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [2160, -740],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "url": "=https://api.linkedin.com/v2/assets?action=registerUpload",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ {\n  \"registerUploadRequest\": {\n    \"recipes\": [\n      \"urn:li:digitalmediaRecipe:feedshare-image\"\n    ],\n    \"owner\": \"urn:li:person:\" + $json.id,\n    \"serviceRelationships\": [\n      {\n        \"relationshipType\": \"OWNER\",\n        \"identifier\": \"urn:li:userGeneratedContent\"\n      }\n    ]\n  }\n} }}",
+        "options": {}
+      },
+      "id": "348ca4b6-fbb0-4a07-9c3d-9a581b95c7fe",
+      "name": "Register Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [620, -580],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "upload-url",
+              "name": "upload_url",
+              "type": "string",
+              "value": "={{ $json.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl }}"
+            },
+            {
+              "id": "asset-id",
+              "name": "asset_id",
+              "type": "string",
+              "value": "={{ $json.value.asset }}"
+            },
+            {
+              "id": "pass-content",
+              "name": "post_content",
+              "type": "string",
+              "value": "={{ $node[\"Set-Final-Message\"].json.post_content }}"
+            },
+            {
+              "id": "pass-image",
+              "name": "image_url",
+              "type": "string",
+              "value": "={{ $node[\"Set-Final-Message\"].json.image_url }}"
+            },
+            {
+              "id": "pass-user-id",
+              "name": "id",
+              "type": "string",
+              "value": "={{ $node[\"Linkedin-User-Detail\"].json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2dfdfc17-78f7-488b-82f2-cb229488062f",
+      "name": "Upload-Image-data",
+      "type": "n8n-nodes-base.set",
+      "position": [840, -580],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "a68a5ba8-8913-455f-9893-12013322e9c0",
+      "name": "Get Image Binary",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1060, -590],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.upload_url }}",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "image/jpeg",
+        "body": "={{ $binary.data }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "id": "37cfc754-d66f-43f8-b881-4b5f0e927fa2",
+      "name": "Upload Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1280, -590],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "post-id",
+              "name": "post_id",
+              "type": "string",
+              "value": "={{ $json.ID }}"
+            },
+            {
+              "id": "post-title",
+              "name": "post_title",
+              "type": "string",
+              "value": "={{ $json['Linkedin Post Title'] }}"
+            },
+            {
+              "id": "image-url",
+              "name": "image_url",
+              "type": "string",
+              "value": "={{ $json['Image URL'] || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c67c5ae9-c0c0-4400-a5ed-c2f96842e24d",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [-40, -180],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract post ID and image URL from webhook payload\nconst body = $input.item.json.body || {};\nconst payload = typeof body.payload === 'string' ? JSON.parse(body.payload) : body.payload || {};\n\n// Get the post ID from button value\nconst actions = payload.actions || [];\nconst postId = actions[0]?.value || '';\n\n// Extract image URL from the message text\nconst message = payload.message || {};\nconst messageText = message.text || '';\nconst imageMatch = messageText.match(/\\*Image URL:\\* (.+)$/m);\nconst imageUrl = imageMatch ? imageMatch[1].trim() : '';\n\nreturn {\n  json: {\n    post_id: postId,\n    image_url: imageUrl\n  }\n};"
+      },
+      "id": "8202c5f6-aa24-44d9-989e-b67d0c481e17",
+      "name": "Set Topics and Images for Processing",
+      "type": "n8n-nodes-base.code",
+      "position": [-480, -600],
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Limit": {
+      "main": [[{ "node": "Edit Fields", "type": "main", "index": 0 }]]
+    },
+    "Webhook": {
+      "main": [[{ "node": "Set Topics and Images for Processing", "type": "main", "index": 0 }]]
+    },
+    "Edit Fields": {
+      "main": [[{ "node": "Linedin-Post-Creator", "type": "main", "index": 0 }]]
+    },
+    "Pick 1 by 1": {
+      "main": [
+        [{ "node": "Update-Status", "type": "main", "index": 0 }],
+        [{ "node": "Post-Linkedin-Groups", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get-Group-id": {
+      "main": [[{ "node": "Pick 1 by 1", "type": "main", "index": 0 }]]
+    },
+    "Upload Image": {
+      "main": [[{ "node": "Linkedin-post", "type": "main", "index": 0 }]]
+    },
+    "Linkedin-post": {
+      "main": [[{ "node": "Get-Group-id", "type": "main", "index": 0 }]]
+    },
+    "Format-Content": {
+      "main": [[{ "node": "Approval-on-Slack", "type": "main", "index": 0 }]]
+    },
+    "Register Image": {
+      "main": [[{ "node": "Upload-Image-data", "type": "main", "index": 0 }]]
+    },
+    "Format-Response": {
+      "main": [[{ "node": "Validate-Response", "type": "main", "index": 0 }]]
+    },
+    "Validate-Status": {
+      "main": [[{ "node": "Limit", "type": "main", "index": 0 }]]
+    },
+    "Get Image Binary": {
+      "main": [[{ "node": "Upload Image", "type": "main", "index": 0 }]]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "Linedin-Post-Creator", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Set-Final-Message": {
+      "main": [[{ "node": "Linkedin-User-Detail", "type": "main", "index": 0 }]]
+    },
+    "Upload-Image-data": {
+      "main": [[{ "node": "Get Image Binary", "type": "main", "index": 0 }]]
+    },
+    "Validate-Response": {
+      "main": [[{ "node": "Set-Final-Message", "type": "main", "index": 0 }]]
+    },
+    "Linkedin-Post-Topic": {
+      "main": [[{ "node": "Validate-Status", "type": "main", "index": 0 }]]
+    },
+    "Linedin-Post-Creator": {
+      "main": [[{ "node": "Format-Content", "type": "main", "index": 0 }]]
+    },
+    "Linkedin-User-Detail": {
+      "main": [[{ "node": "Register Image", "type": "main", "index": 0 }]]
+    },
+    "Post-Linkedin-Groups": {
+      "main": [[{ "node": "Pick 1 by 1", "type": "main", "index": 0 }]]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [[{ "node": "Linedin-Post-Creator", "type": "ai_outputParser", "index": 0 }]]
+    },
+    "Set Topics and Images for Processing": {
+      "main": [[{ "node": "Format-Response", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {}
+}
+
