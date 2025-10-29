@@ -3,14 +3,14 @@
   "nodes": [
     {
       "parameters": {
-        "content": "Interactive flow:\n- Start at form: /form/social-topic-form (enter topic)\n- LLM returns 5 titles (JSON)\n- Pause: choose a title via Resume URL with {\"choice\":0..4}\n- Generate post + image\n- Pause: approve/edit via Resume URL with { approved: true, text?: string }\n- If approved: log to Google Sheets and post to X/LinkedIn.\n\n⚠️ SETUP REQUIRED:\n1. Assign credentials: OpenAI, Google Sheets, Twitter, LinkedIn\n2. Configure LinkedIn: Select your Person/Profile in the node settings\n\n📝 Note: Facebook removed for simplified testing"
+        "content": "Interactive flow:\n- Start at form: /form/social-topic-form (enter topic)\n- LLM returns 5 titles (JSON)\n- Pause: choose a title via Resume URL with {\"choice\":0..4}\n- Generate post + image\n- Pause: approve/edit via Resume URL with { approved: true, text?: string }\n- If approved: log to Google Sheets and post to X/LinkedIn.\n\n⚠️ SETUP REQUIRED:\n1. Assign credentials: OpenAI, Google Sheets, Twitter, LinkedIn\n2. Configure LinkedIn: Select your Person/Profile in the node settings\n\n📝 Note: Now supports multiple LLM providers (Ollama, OpenAI, Anthropic)"
       },
       "id": "c87d4fc9-e780-448f-98bf-127fdb2597ee",
       "name": "Workflow Notes",
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -96,
-        -64
+        -176,
+        -176
       ],
       "typeVersion": 1
     },
@@ -34,42 +34,10 @@
       "name": "Set Defaults",
       "type": "n8n-nodes-base.set",
       "position": [
-        176,
+        -16,
         160
       ],
       "typeVersion": 2
-    },
-    {
-      "parameters": {
-        "modelId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "chatgpt-4o-latest",
-          "cachedResultName": "CHATGPT-4O-LATEST"
-        },
-        "messages": {
-          "values": [
-            {
-              "content": "=You are a helpful social media strategist. Based on the general topic: {{ $json.Topic }}, generate five distinct, attention-grabbing, 50-character titles. Return ONLY strict JSON in this shape: {\n  \"titles\": [\"title 1\", \"title 2\", \"title 3\", \"title 4\", \"title 5\"]\n}."
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "48092dc2-07cc-4254-8d56-9037dd6d46d6",
-      "name": "Generate 5 Titles",
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "position": [
-        400,
-        160
-      ],
-      "typeVersion": 1.8,
-      "credentials": {
-        "openAiApi": {
-          "id": "5vLemfQFJZufLdSn",
-          "name": "OpenAi account"
-        }
-      }
     },
     {
       "parameters": {
@@ -110,8 +78,8 @@
       "name": "Wait for Title Selection",
       "type": "n8n-nodes-base.wait",
       "position": [
-        976,
-        336
+        1024,
+        400
       ],
       "typeVersion": 1,
       "notesInFlow": true,
@@ -135,40 +103,8 @@
     },
     {
       "parameters": {
-        "modelId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "chatgpt-4o-latest",
-          "cachedResultName": "CHATGPT-4O-LATEST"
-        },
-        "messages": {
-          "values": [
-            {
-              "content": "=Write a concise, solution-oriented social post based on the title: \n\n\"{{ $json.selectedTitle }}\"\n\nUse simple language, add relevant hashtags, keep under 280 characters. Return only the text of the post."
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "ad35507f-41f6-4410-bc8c-6222b3eb6cf1",
-      "name": "Generate Post Text",
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "position": [
-        1584,
-        176
-      ],
-      "typeVersion": 1.8,
-      "credentials": {
-        "openAiApi": {
-          "id": "5vLemfQFJZufLdSn",
-          "name": "OpenAi account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "resource": "image",
-        "prompt": "=Create a professional, modern, eye-catching image for a social media post about: {{ $json.selectedTitle }}. Style: clean, business-friendly, with vibrant colors and bold typography.",
+        "prompt": "=Create a professional, eye-catching, futuristic image for a social media post about: {{ $node[\"Select Title\"].json.selectedTitle }}. Style: modern AI-tech aesthetic with electric blue and purple gradients, subtle circuit board patterns, holographic glows, and sleek bold typography. Clean, innovative, business-forward with a cutting-edge tech vibe.",
         "options": {
           "dalleQuality": "standard",
           "size": "1024x1024",
@@ -180,8 +116,8 @@
       "name": "Generate Image",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "position": [
-        1632,
-        448
+        1712,
+        464
       ],
       "typeVersion": 1.8,
       "credentials": {
@@ -195,7 +131,7 @@
       "parameters": {
         "resume": "form",
         "formTitle": "Approve Your Social Media Post",
-        "formDescription": "=<p>Title: {{ $node[\"Select Title\"].json.selectedTitle }}</p>\n\n<p>Image:</p>\n<img src=\"{{ $json.url }}\" width=\"200\">\n\n<p>Text: {{ $json.message.content }}</p>\n\n<p>✅ Approve to post | ✏️ Modify to edit</p>",
+        "formDescription": "=<p>Title: {{ $node[\"Select Title\"].json.selectedTitle }}</p>\n\n<p>Image:</p>\n<img src=\"{{ $json.url }}\" width=\"200\">\n\n<p>Text: {{ $node[\"Merge Text + Image\"].json.message.content || $node[\"Merge Text + Image\"].json.content[0].text }}</p>\n\n<p>✅ Approve to post | ✏️ Modify to edit</p>",
         "formFields": {
           "values": [
             {
@@ -225,7 +161,7 @@
       "name": "Wait for Approval / Edit",
       "type": "n8n-nodes-base.wait",
       "position": [
-        2080,
+        2160,
         352
       ],
       "typeVersion": 1,
@@ -243,8 +179,8 @@
       "name": "Merge Post + Approval",
       "type": "n8n-nodes-base.merge",
       "position": [
-        2240,
-        160
+        2304,
+        192
       ],
       "typeVersion": 2
     },
@@ -264,8 +200,8 @@
       "name": "IF Approved?",
       "type": "n8n-nodes-base.if",
       "position": [
-        2544,
-        272
+        2592,
+        192
       ],
       "typeVersion": 2
     },
@@ -358,7 +294,7 @@
       "type": "n8n-nodes-base.twitter",
       "position": [
         2896,
-        128
+        144
       ],
       "typeVersion": 2,
       "credentials": {
@@ -381,8 +317,8 @@
       "name": "Create LinkedIn Post",
       "type": "n8n-nodes-base.linkedIn",
       "position": [
-        2880,
-        384
+        2896,
+        368
       ],
       "typeVersion": 1,
       "credentials": {
@@ -394,12 +330,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// Parse JSON returned by the LLM to extract titles array\nconst itemsOut = [];\nfor (const item of $input.all()) {\n  const content = item.json.message?.content || '';\n  let parsed = { titles: [] };\n  try {\n    parsed = JSON.parse(content);\n  } catch (e) {\n    // fallback: attempt to extract lines\n    const maybe = content.split('\\n')\n      .map(l => l.replace(/^-\\s*/, '').trim())\n      .filter(Boolean)\n      .slice(0,5);\n    parsed.titles = maybe;\n  }\n  itemsOut.push({ json: { titles: parsed.titles } });\n}\nreturn itemsOut;"
+        "jsCode": "// Completely separate parsing for each LLM provider\nconst itemsOut = [];\n\nfor (const item of $input.all()) {\n  let titles = [];\n  \n  // ANTHROPIC PARSING - content is an array\n  if (item.json.content && Array.isArray(item.json.content)) {\n    try {\n      // Anthropic: content[0].text with markdown wrapper\n      const text = item.json.content[0].text;\n      // Remove ```json and ``` markers\n      const cleanText = text.replace(/```json\\s*/gi, '').replace(/```\\s*$/g, '').trim();\n      const parsed = JSON.parse(cleanText);\n      titles = parsed.titles || [];\n    } catch (e) {\n      titles = ['Error parsing Anthropic response'];\n    }\n  }\n  // OLLAMA PARSING - content is a string (direct, not in message)\n  else if (item.json.content && typeof item.json.content === 'string') {\n    try {\n      // Ollama: content is a JSON string directly\n      const parsed = JSON.parse(item.json.content);\n      titles = parsed.titles || [];\n    } catch (e) {\n      titles = ['Error parsing Ollama response'];\n    }\n  }\n  // OPENAI PARSING - message.content is an object\n  else if (item.json.message?.content && typeof item.json.message.content === 'object') {\n    try {\n      // OpenAI: message.content is already an object with titles\n      titles = item.json.message.content.titles || [];\n    } catch (e) {\n      titles = ['Error parsing OpenAI response'];\n    }\n  }\n  // FALLBACK - check message.content as string (backup for Ollama)\n  else if (item.json.message?.content && typeof item.json.message.content === 'string') {\n    try {\n      const parsed = JSON.parse(item.json.message.content);\n      titles = parsed.titles || [];\n    } catch (e) {\n      titles = ['Error parsing message.content string'];\n    }\n  }\n  else {\n    titles = ['Error: Unknown response format'];\n  }\n  \n  itemsOut.push({ json: { titles: titles } });\n}\n\nreturn itemsOut;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        720,
+        832,
         160
       ],
       "id": "c7bb6f49-b5e7-48f1-b6a4-833c09008ded",
@@ -407,26 +343,26 @@
     },
     {
       "parameters": {
-        "jsCode": "// Pick selected title from form submission\nconst items = $input.all();\nreturn items.map((item) => {\n  const titles = item.json.titles || [];\n  \n  // The form sends \"Choice\" (capital C) with the actual title text\n  const selectedTitle = item.json.Choice || item.json.choice || titles[0] || '';\n  \n  return { json: { selectedTitle, titles } };\n});"
+        "jsCode": "// Pick selected title from form submission\nconst items = $input.all();\nreturn items.map((item) => {\n  const titles = item.json.titles || [];\n  \n  // The form sends \"Choice\" (capital C) with the actual title text\n  const selectedTitle = item.json.Choice || item.json.choice || titles[0] || '';\n  \n  return { \n    json: { \n      selectedTitle, \n      titles,\n      LLMProvider: item.json.LLMProvider\n    } \n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1392,
-        80
+        1360,
+        176
       ],
       "id": "9e964757-7e73-4c0c-9f39-3cbaa354192d",
       "name": "Select Title"
     },
     {
       "parameters": {
-        "jsCode": "// Build final text: prefer user edits from approval payload\nconst items = $input.all();\nreturn items.map((item) => {\n  // Get post text from current input (from Merge)\n  const postText = item.json?.message?.content || '';\n  \n  // Get approval data from current input (from Merge)\n  const approved = Boolean(item.json.approved || item.json.Approve === 'Approve' || item.json.Approve === 'true');\n  const userEdit = item.json.text || item.json.Modify || '';\n  const finalText = (userEdit && String(userEdit).trim().length > 0) \n    ? userEdit \n    : postText;\n  \n  // Get selectedTitle DIRECTLY from the Select Title node\n  const selectedTitle = $node[\"Select Title\"].json.selectedTitle || '';\n  \n  // Get image data from current input (passed through from Generate Image)\n  const imageUrl = item.json.url || '';\n  \n  return { \n    json: { \n      approved, \n      finalText,\n      selectedTitle,\n      imageUrl\n    },\n    // Pass through binary image data for LinkedIn\n    binary: item.binary || {}\n  };\n});"
+        "jsCode": "// Build final text: prefer user edits from approval payload\nconst items = $input.all();\nreturn items.map((item) => {\n  // Get post text from current input (from Merge) - handle different formats\n  let postText = '';\n  \n  // Try Anthropic format first\n  if (item.json?.content && Array.isArray(item.json.content)) {\n    postText = item.json.content[0]?.text || '';\n  }\n  // Try OpenAI/Ollama format\n  else if (item.json?.message?.content) {\n    postText = item.json.message.content;\n  }\n  \n  // Get approval data from current input (from Merge)\n  const approved = Boolean(item.json.approved || item.json.Approve === 'Approve' || item.json.Approve === 'true');\n  const userEdit = item.json.text || item.json.Modify || '';\n  const finalText = (userEdit && String(userEdit).trim().length > 0) \n    ? userEdit \n    : postText;\n  \n  // Get selectedTitle DIRECTLY from the Select Title node\n  const selectedTitle = $node[\"Select Title\"].json.selectedTitle || '';\n  \n  // Get image data from current input (passed through from Generate Image)\n  const imageUrl = item.json.url || '';\n  \n  return { \n    json: { \n      approved, \n      finalText,\n      selectedTitle,\n      imageUrl\n    },\n    // Pass through binary image data for LinkedIn\n    binary: item.binary || {}\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2416,
-        48
+        2432,
+        192
       ],
       "id": "a1a82b7b-eb4d-4509-a470-50e8ee54fbde",
       "name": "Finalize Post Text"
@@ -441,6 +377,24 @@
               "fieldLabel": "Topic",
               "placeholder": "Enter your topic (e.g., automation tips)",
               "requiredField": true
+            },
+            {
+              "fieldLabel": "LLMProvider",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Ollama"
+                  },
+                  {
+                    "option": "OpenAI"
+                  },
+                  {
+                    "option": "Anthropic"
+                  }
+                ]
+              },
+              "requiredField": true
             }
           ]
         },
@@ -449,7 +403,7 @@
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.3,
       "position": [
-        -128,
+        -192,
         160
       ],
       "id": "98445d4a-7211-492d-8f1e-6c21294d2ad2",
@@ -465,11 +419,392 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1856,
-        304
+        2064,
+        160
       ],
       "id": "43ee7ae0-4422-4de4-afa1-771823069092",
       "name": "Merge Text + Image"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['LLMProvider'] }}",
+                    "rightValue": "Ollama",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7bd33c1c-4e93-40f3-adb3-f795e57b9d82"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ollama"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e2a46c08-365f-412a-9e22-041e479b7091",
+                    "leftValue": "={{ $json['LLMProvider'] }}",
+                    "rightValue": "OpenAI",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ChatGPT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "88dd1562-8ac5-47f3-bbfc-cd1890ead603",
+                    "leftValue": "={{ $json['LLMProvider'] }}",
+                    "rightValue": "Anthropic",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Claude"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        192,
+        144
+      ],
+      "id": "61cc043f-b298-4e93-93e6-652d95d2f670",
+      "name": "Choose LLM Provider"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "qwen2.5:3b",
+          "mode": "list",
+          "cachedResultName": "qwen2.5:3b"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a helpful social media strategist. Based on the general topic: {{ $json.Topic }}, generate five distinct, attention-grabbing, 50-character titles. Return ONLY strict JSON in this shape: {\n  \"titles\": [\"title 1\", \"title 2\", \"title 3\", \"title 4\", \"title 5\"]\n}."
+            }
+          ]
+        },
+        "options": {
+          "format": "json"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -128
+      ],
+      "id": "72527831-393e-4cd5-8adf-95c460e8b679",
+      "name": "Generate 5 Titles (Ollama)",
+      "credentials": {
+        "ollamaApi": {
+          "id": "lmr6jmpriKv5EAnz",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chatgpt-4o-latest",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a helpful social media strategist. Based on the general topic: {{ $json.Topic }}, generate five distinct, attention-grabbing, 50-character titles. Return ONLY strict JSON in this shape: {\n  \"titles\": [\"title 1\", \"title 2\", \"title 3\", \"title 4\", \"title 5\"]\n}."
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "id": "48092dc2-07cc-4254-8d56-9037dd6d46d6",
+      "name": "Generate 5 Titles (OpenAI)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        480,
+        160
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "5vLemfQFJZufLdSn",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "claude-haiku-4-5-20251001"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a helpful social media strategist. Based on the general topic: {{ $json.Topic }}, generate five distinct, attention-grabbing, 50-character titles. Return ONLY strict JSON in this shape: {\n  \"titles\": [\"title 1\", \"title 2\", \"title 3\", \"title 4\", \"title 5\"]\n}."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        480,
+        400
+      ],
+      "id": "d845f5aa-bd5e-440e-8ffd-a4c5ec06d7d3",
+      "name": "Generate 5 Titles (Anthropic)",
+      "credentials": {
+        "anthropicApi": {
+          "id": "gZvBrf40T1R4aXpT",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $node[\"On form submission\"].json.LLMProvider }}",
+                    "rightValue": "Ollama",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7bd33c1c-4e93-40f3-adb3-f795e57b9d82"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ollama"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e2a46c08-365f-412a-9e22-041e479b7091",
+                    "leftValue": "={{ $node[\"On form submission\"].json.LLMProvider }}",
+                    "rightValue": "OpenAI",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ChatGPT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "88dd1562-8ac5-47f3-bbfc-cd1890ead603",
+                    "leftValue": "={{ $node[\"On form submission\"].json.LLMProvider }}",
+                    "rightValue": "Anthropic",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Claude"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1488,
+        -96
+      ],
+      "id": "c69d2003-31c4-46d4-bf37-d8683b64c260",
+      "name": "Choose LLM Provider1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chatgpt-4o-latest",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Write an engaging, informative social media post based on this title:\n\n\"{{ $json.selectedTitle }}\"\n\nStyle guidelines:\n- Start with a compelling hook or question that makes people think\n- Share 1-2 actionable insights, tips, or real-world examples\n- Use a conversational, personal tone (like talking to a colleague over coffee)\n- Keep it concise but valuable - aim for 200-300 characters\n- Add 2-3 relevant hashtags at the end\n- If applicable, mention a helpful resource or tool (no full URLs, just names)\n- End with a thought-provoking statement or call-to-action\n\nFocus on being helpful and authentic rather than salesy. Make it the kind of post you'd actually want to read and engage with.\n\nReturn only the post text, nothing else."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ad35507f-41f6-4410-bc8c-6222b3eb6cf1",
+      "name": "Generate Post Text (OpenAI)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1680,
+        -80
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "5vLemfQFJZufLdSn",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "qwen3:8b",
+          "mode": "list",
+          "cachedResultName": "qwen3:8b"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Write an engaging, informative social media post based on this title:\n\n\"{{ $json.selectedTitle }}\"\n\nStyle guidelines:\n- Start with a compelling hook or question that makes people think\n- Share 1-2 actionable insights, tips, or real-world examples\n- Use a conversational, personal tone (like talking to a colleague over coffee)\n- Keep it concise but valuable - aim for 200-300 characters\n- Add 2-3 relevant hashtags at the end\n- If applicable, mention a helpful resource or tool (no full URLs, just names)\n- End with a thought-provoking statement or call-to-action\n\nFocus on being helpful and authentic rather than salesy. Make it the kind of post you'd actually want to read and engage with.\n\nReturn only the post text, nothing else."
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {
+          "format": ""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        -240
+      ],
+      "id": "96c7a7c1-f2c0-4b29-abd7-ca8001618a97",
+      "name": "Generate Post Text (Ollama)1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "lmr6jmpriKv5EAnz",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "claude-haiku-4-5-20251001"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Write an engaging, informative social media post based on this title:\n\n\"{{ $json.selectedTitle }}\"\n\nStyle guidelines:\n- Start with a compelling hook or question that makes people think\n- Share 1-2 actionable insights, tips, or real-world examples\n- Use a conversational, personal tone (like talking to a colleague over coffee)\n- Keep it concise but valuable - aim for 200-300 characters\n- Add 2-3 relevant hashtags at the end\n- If applicable, mention a helpful resource or tool (no full URLs, just names)\n- End with a thought-provoking statement or call-to-action\n\nFocus on being helpful and authentic rather than salesy. Make it the kind of post you'd actually want to read and engage with.\n\nReturn only the post text, nothing else."
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        112
+      ],
+      "id": "92c8d4fb-ec25-48de-b097-bfd14dfbd9e0",
+      "name": "Generate Post Text (Anthropic)1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "gZvBrf40T1R4aXpT",
+          "name": "Anthropic account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -478,7 +813,7 @@
       "main": [
         [
           {
-            "node": "Generate 5 Titles",
+            "node": "Choose LLM Provider",
             "type": "main",
             "index": 0
           }
@@ -492,17 +827,6 @@
             "node": "Merge Titles + Choice",
             "type": "main",
             "index": 1
-          }
-        ]
-      ]
-    },
-    "Generate Post Text": {
-      "main": [
-        [
-          {
-            "node": "Merge Text + Image",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -523,27 +847,6 @@
         [
           {
             "node": "Append or Update Row (Sheet1)",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Create Tweet",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Create LinkedIn Post",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Generate 5 Titles": {
-      "main": [
-        [
-          {
-            "node": "Parse Titles JSON",
             "type": "main",
             "index": 0
           }
@@ -581,12 +884,12 @@
       "main": [
         [
           {
-            "node": "Generate Post Text",
+            "node": "Generate Image",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Generate Image",
+            "node": "Choose LLM Provider1",
             "type": "main",
             "index": 0
           }
@@ -652,11 +955,127 @@
           }
         ]
       ]
+    },
+    "Choose LLM Provider": {
+      "main": [
+        [
+          {
+            "node": "Generate 5 Titles (Ollama)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate 5 Titles (OpenAI)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate 5 Titles (Anthropic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate 5 Titles (OpenAI)": {
+      "main": [
+        [
+          {
+            "node": "Parse Titles JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate 5 Titles (Ollama)": {
+      "main": [
+        [
+          {
+            "node": "Parse Titles JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate 5 Titles (Anthropic)": {
+      "main": [
+        [
+          {
+            "node": "Parse Titles JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose LLM Provider1": {
+      "main": [
+        [
+          {
+            "node": "Generate Post Text (Ollama)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Post Text (OpenAI)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Post Text (Anthropic)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Post Text (OpenAI)": {
+      "main": [
+        [
+          {
+            "node": "Merge Text + Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Post Text (Anthropic)1": {
+      "main": [
+        [
+          {
+            "node": "Merge Text + Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Post Text (Ollama)1": {
+      "main": [
+        [
+          {
+            "node": "Merge Text + Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {},
-  "versionId": "4bb28447-ed05-4741-b21c-07ee4d419cfa",
+  "versionId": "eba8a2f8-31c3-4e5b-ac0c-47b49d2ed1a4",
   "meta": {
     "templateId": "",
     "instanceId": ""
