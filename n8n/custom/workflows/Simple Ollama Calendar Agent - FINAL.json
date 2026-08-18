@@ -1,15 +1,67 @@
 {
-  "name": "Simple Ollama Calendar Agent - FINAL",
+  "active": true,
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "id": "8TcDFqurpB8Jzl70",
+  "meta": null,
+  "name": "Simple Ollama Calendar Agent V1.0",
   "nodes": [
     {
       "parameters": {
         "options": {}
       },
-      "id": "trigger-final",
+      "id": "a0b179cf-8707-46b5-b10e-c4b92d6cc04e",
       "name": "When chat message received",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.1,
-      "position": [80, 64],
+      "position": [
+        288,
+        64
+      ],
       "webhookId": "calendar-final-001"
     },
     {
@@ -19,11 +71,14 @@
         "width": 250,
         "color": 6
       },
-      "id": "note-final",
+      "id": "ad2f01c3-bd7f-4acd-97cf-3035bce537ad",
       "name": "Info",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-200, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -32,11 +87,14 @@
           "temperature": 0.2
         }
       },
-      "id": "llm-final",
+      "id": "ad7284f1-2ad1-42bf-8eba-7ed044b19455",
       "name": "Ollama Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
-      "position": [340, 280],
+      "position": [
+        544,
+        288
+      ],
       "credentials": {
         "ollamaApi": {
           "id": "lmr6jmpriKv5EAnz",
@@ -50,11 +108,14 @@
           "systemMessage": "=You are a helpful calendar assistant. When users ask about calendar events:\n\n1. Determine the date range from their question\n2. CRITICAL: Use this EXACT format for dates: YYYY-MM-DD HH:MM:SS\n   - Example: 2025-10-04 00:00:00 (NOT 2025-10-04T00:00:00Z)\n   - NO 'T' separator, NO timezone 'Z'\n   - Use space between date and time\n   - Always include seconds (00)\n3. Call the Google Calendar tool with 'After' and 'Before' parameters\n4. Present results with COMPLETE event details:\n   - Event title/summary\n   - Start and end time\n   - Description (if available)\n   - Location (if available)\n   - Attendees (if available)\n   Format each event clearly and include ALL available information\n\nDate calculations:\n- Current: {{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}\n- Today start: {{ $now.startOf('day').toFormat('yyyy-MM-dd HH:mm:ss') }}\n- Today end: {{ $now.endOf('day').toFormat('yyyy-MM-dd HH:mm:ss') }}\n- Tomorrow start: {{ $now.plus({ days: 1 }).startOf('day').toFormat('yyyy-MM-dd HH:mm:ss') }}\n- Tomorrow end: {{ $now.plus({ days: 1 }).endOf('day').toFormat('yyyy-MM-dd HH:mm:ss') }}\n\nExample queries:\n- \"tomorrow\" → After: \"2025-10-04 00:00:00\", Before: \"2025-10-04 23:59:59\"\n- \"next week\" → After: \"2025-10-07 00:00:00\", Before: \"2025-10-14 23:59:59\""
         }
       },
-      "id": "agent-final",
+      "id": "32166edc-e72c-46d1-8d8f-6ff02499e196",
       "name": "AI Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.7,
-      "position": [300, 64]
+      "position": [
+        512,
+        64
+      ]
     },
     {
       "parameters": {
@@ -62,8 +123,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
-      "position": [460, 280],
-      "id": "mem-final",
+      "position": [
+        672,
+        288
+      ],
+      "id": "e417902a-9857-4781-bd88-c15a6fc391a5",
       "name": "Memory"
     },
     {
@@ -76,13 +140,16 @@
         },
         "timeMin": "={{ $fromAI('After', $now.startOf('day').toFormat('yyyy-MM-dd HH:mm:ss'), 'string') }}",
         "timeMax": "={{ $fromAI('Before', $now.plus({ days: 7 }).endOf('day').toFormat('yyyy-MM-dd HH:mm:ss'), 'string') }}",
-        "description": "Get events from Google Calendar between two dates. REQUIRED format: YYYY-MM-DD HH:MM:SS\n\nParameters:\n- After: Start date/time (example: 2025-10-04 00:00:00)\n- Before: End date/time (example: 2025-10-04 23:59:59)\n\nCRITICAL: Use SPACE between date and time, NOT 'T'. NO timezone indicator. Format must be: YYYY-MM-DD HH:MM:SS",
-        "options": {}
+        "options": {},
+        "description": "Get events from Google Calendar between two dates. REQUIRED format: YYYY-MM-DD HH:MM:SS\n\nParameters:\n- After: Start date/time (example: 2025-10-04 00:00:00)\n- Before: End date/time (example: 2025-10-04 23:59:59)\n\nCRITICAL: Use SPACE between date and time, NOT 'T'. NO timezone indicator. Format must be: YYYY-MM-DD HH:MM:SS"
       },
       "type": "n8n-nodes-base.googleCalendarTool",
       "typeVersion": 1.3,
-      "position": [580, 280],
-      "id": "cal-final",
+      "position": [
+        784,
+        288
+      ],
+      "id": "5b981267-33b4-4e70-aa28-c125e3ac92b1",
       "name": "Google Calendar",
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -92,22 +159,10 @@
       }
     }
   ],
-  "connections": {
-    "When chat message received": {
-      "main": [[{"node": "AI Agent", "type": "main", "index": 0}]]
-    },
-    "Ollama Chat Model": {
-      "ai_languageModel": [[{"node": "AI Agent", "type": "ai_languageModel", "index": 0}]]
-    },
-    "Memory": {
-      "ai_memory": [[{"node": "AI Agent", "type": "ai_memory", "index": 0}]]
-    },
-    "Google Calendar": {
-      "ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]
-    }
-  },
+  "pinData": {},
   "settings": {
     "executionOrder": "v1"
   },
-  "tags": []
+  "tags": [],
+  "versionId": "15507b0b-cad5-455d-84a9-d4902f3cee0e"
 }
