@@ -347,5 +347,5 @@ When adding new workflows:
 
 **Document Version:** 1.0  
 **Maintained By:** AI Coding Assistant  
-**Repository:** [self-hosted-ai-starter-kit](https://github.com/n8n-io/self-hosted-ai-starter-kit)
+**Repository:** [bixoryai/n8n-local](https://github.com/bixoryai/n8n-local) (fork of [n8n-io/self-hosted-ai-starter-kit](https://github.com/n8n-io/self-hosted-ai-starter-kit))
 
