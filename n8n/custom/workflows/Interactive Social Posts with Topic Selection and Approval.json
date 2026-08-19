@@ -1038,9 +1038,9 @@
       "parameters": {
         "modelId": {
           "__rl": true,
-          "value": "qwen3:8b",
+          "value": "gemma4:latest",
           "mode": "list",
-          "cachedResultName": "qwen3:8b"
+          "cachedResultName": "gemma4:latest"
         },
         "messages": {
           "values": [

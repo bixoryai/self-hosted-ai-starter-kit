@@ -82,7 +82,7 @@
     },
     {
       "parameters": {
-        "model": "qwen2.5:3b",
+        "model": "llama3.2:latest",
         "options": {
           "temperature": 0.2
         }

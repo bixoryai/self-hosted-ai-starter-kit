@@ -54,7 +54,7 @@
     },
     {
       "parameters": {
-        "model": "mxbai-embed-large:latest"
+        "model": "nomic-embed-text-v2-moe:latest"
       },
       "id": "9c7fb858-b571-4626-b976-d3e1995c464b",
       "name": "Embeddings Ollama",
@@ -147,7 +147,7 @@
     },
     {
       "parameters": {
-        "model": "gpt-oss:latest",
+        "model": "mistral:7b",
         "options": {}
       },
       "id": "4d924b4a-fe07-4606-8385-613d6ea14991",
@@ -205,7 +205,7 @@
     },
     {
       "parameters": {
-        "model": "mxbai-embed-large:latest"
+        "model": "nomic-embed-text-v2-moe:latest"
       },
       "id": "57d3be1d-73cd-4464-a3f3-7dd4a3157cdf",
       "name": "Embeddings Ollama1",
