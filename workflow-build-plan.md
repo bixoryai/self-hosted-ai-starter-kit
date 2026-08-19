@@ -1,8 +1,10 @@
 # n8n AI Workflow Build Plan & Tracker
 
 **Project:** Self-hosted AI Starter Kit  
-**Last Updated:** October 3, 2025  
+**Last Updated:** August 18, 2026  
 **Purpose:** Track all AI-powered n8n workflows - built, imported, and planned
+
+**Environment this reflects:** n8n **2.36.0**, PostgreSQL **17**, Qdrant **v1.19.0**, Ollama on the Windows host (`host.docker.internal:11434`).
 
 ---
 
@@ -10,51 +12,74 @@
 
 | Category | Count | Status |
 |----------|-------|--------|
-| **Workflow JSON Files** | 8 | ✅ Created |
-| **Workflows in n8n Database** | 3 | ⚠️ Partially Imported |
+| **Workflow JSON Files** | 10 | ✅ Created |
+| **Workflows in n8n Database** | 12 | ✅ All files imported |
+| **Active Workflows** | 4 | ▶️ Running |
 | **Proposed New Workflows** | 8 | 📝 Planned |
-| **Total Workflows (Target)** | 16+ | 🎯 In Progress |
 
 ---
 
 ## ✅ **EXISTING WORKFLOWS**
 
-### **A. Workflows in Database (Actually Imported in n8n UI)**
+### **A. Workflows in the n8n Database**
 
-These workflows are currently available in your n8n UI at http://localhost:5678:
+Available in the n8n UI at http://localhost:5678:
 
-| # | Workflow ID | Workflow Name | Active | Type | Notes |
-|---|-------------|---------------|--------|------|-------|
-| 1 | `Pk4NQ2rND1t8LDzQ` | Simple OpenAI Chatbot Agent | ❌ Inactive | AI Chat | Uses OpenAI API |
-| 2 | `CgmNjq9AcICAPPyi` | Simple Ollama Chatbot | ❌ Inactive | AI Chat | Local Ollama LLM |
-| 3 | `R0Ipc1PSJAltE0h6` | Learn n8n Basics in 3 Easy Steps ✨ | ❌ Inactive | Tutorial | Getting Started |
+| # | Workflow ID | Name | State |
+|---|-------------|------|-------|
+| 1 | `f3407nk2cSrvl0aa` | Interactive Social Posts with Topic Selection and Approval | ✅ Active |
+| 2 | `R0Ipc1PSJAltE0h6` | Learn n8n Basics in 3 Easy Steps ✨ | ✅ Active |
+| 3 | `8TcDFqurpB8Jzl70` | Simple Ollama Calendar Agent V1.0 | ✅ Active |
+| 4 | `CgmNjq9AcICAPPyi` | Simple Ollama Chatbot | ✅ Active |
+| 5 | `auto-export-monitor` | Auto-Export Workflow Monitor | ⬜ Inactive |
+| 6 | `ygwGs7s8Q1o8Q2rr` | Chat with a database using AI | ⬜ Inactive |
+| 7 | `rG2dxJR1HY5WNE4l` | Generate AI-Powered LinkedIn Posts with Google Gemini and Gen-Imager | ⬜ Inactive |
+| 8 | `UbI2h5lXrIcJYyXS` | LinkedIn Post Automation with AI & Slack Approval | ⬜ Inactive |
+| 9 | `QL2bUUsxQZjqBpVI` | Local Chatbot with Retrieval Augmented Generation (RAG) | ⬜ Inactive |
+| 10 | `giq3zqaP4QbY6LgC` | Research_Paper_Scraper_to_Google_Sheets | ⬜ Inactive |
+| 11 | `fB61UhBMRQ3kCrUE` | Self-Hosted Automate Social Media Posts with Local AI Content and Images across Twitter, LinkedIn & Facebook | ⬜ Inactive |
+| 12 | `Pk4NQ2rND1t8LDzQ` | Simple OpenAI Chatbot Agent | ⬜ Inactive |
 
-**Credentials Configured:**
-- ✅ Ollama account (Local AI)
-- ✅ OpenAI account
-- ✅ Gmail account
-- ✅ Google Calendar account
+### **B. Workflow JSON Files**
+
+All 10 files in `n8n/custom/workflows/` have been imported. Two of them
+(`Interactive Social Posts…`, `Simple Ollama Calendar Agent - FINAL`) carry the
+id of the live workflow they represent, so re-importing updates that workflow
+rather than creating a duplicate.
+
+`rag-chatbot-for-company-info.json` is **not** imported by choice: it uses
+Pinecone, an external paid service, for a capability Qdrant already provides
+locally. Port it to Qdrant before importing.
+
+**Importing from the CLI:**
+
+```bash
+docker exec n8n n8n import:workflow --separate --input=/data/shared/<dir>/
+```
+
+⚠️ `import:workflow` **deactivates every workflow it touches**. Re-activate
+afterwards and restart n8n, or the trigger silently stops firing:
+
+```bash
+docker exec n8n n8n publish:workflow --id=<workflow-id>
+docker compose restart n8n
+```
 
 ---
 
-### **B. Workflow JSON Files Available (Not Yet Imported)**
+## ⚠️ **Known Gaps**
 
-These workflow files exist in `/n8n/custom/workflows/` but haven't been imported to the n8n database yet:
+| Item | Detail |
+|------|--------|
+| **No workflow has been run end-to-end** | Everything verified so far is static (node types, model names, connectivity). The chat trigger is not a public webhook and `n8n execute` needs an Execute Workflow Trigger, so a real smoke test has to happen in the UI. |
+| **Qdrant collections need re-indexing** | The RAG workflow's embedding model moved from `mxbai-embed-large` (1024 dims) to `nomic-embed-text-v2-moe` (768 dims). Collections built with the old model cannot be queried until rebuilt. |
+| **Pinecone dependency** | `rag-chatbot-for-company-info.json` still targets Pinecone rather than the local Qdrant. |
+| **Credentials not wired** | The LinkedIn / Twitter / Facebook / Slack / Gemini workflows import cleanly but need credentials before they run. |
 
-| # | Filename | Description | Import Status | Priority |
-|---|----------|-------------|---------------|----------|
-| 1 | `auto-export-workflow.json` | Auto-exports workflows to files | ⬜ Not Imported | 🔴 High |
-| 2 | `auto-research-paper-collection.json` | Collects and organizes research papers | ⬜ Not Imported | 🟡 Medium |
-| 3 | `Chat with a database using AI.json` | AI-powered database query interface | ⬜ Not Imported | 🔴 High |
-| 4 | `Generate AI-Powered LinkedIn Posts with Google Gemini and Gen-Imager.json` | LinkedIn content generator | ⬜ Not Imported | 🟢 Low |
-| 5 | `Interactive Social Posts with Topic Selection and Approval.json` | Social media content with approval flow | ⬜ Not Imported | 🟡 Medium |
-| 6 | `Local Chatbot with Retrieval Augmented Generation (RAG).json` | RAG chatbot for PDFs | ⬜ Not Imported | 🔴 High |
-| 7 | `rag-chatbot-for-company-info.json` | Company knowledge base chatbot | ⬜ Not Imported | 🔴 High |
-| 8 | `Social Media Posting Agent.json` | Automated social media agent | ⬜ Not Imported | 🟡 Medium |
-
-**Action Required:** Import these workflows into n8n UI via:
-- Option 1: Manual import through n8n UI (Settings → Import Workflow)
-- Option 2: Uncomment `n8n-import` service in `docker-compose.yml` (first run only)
+**Ollama models referenced by workflows** — all verified present on the host:
+`llama3.2:latest`, `gemma4:latest`, `mistral:7b`, `nomic-embed-text-v2-moe:latest`.
+Check with `curl -s http://localhost:11434/api/tags` before adding a workflow that
+names a new model; a missing model fails only at run time.
 
 ---
 
