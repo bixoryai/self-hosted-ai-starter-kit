@@ -1,14 +1,14 @@
 volumes:
   n8n_storage:
     external: true
-    name: self-hosted-ai-starter-kit_n8n_storage
+    name: self-hosted-n8n_n8n_storage
   postgres_storage:
     external: true
-    name: self-hosted-ai-starter-kit_postgres17_storage
+    name: self-hosted-n8n_postgres17_storage
   # ollama_storage:  # Not needed - Ollama runs on Windows host
   qdrant_storage:
     external: true
-    name: self-hosted-ai-starter-kit_qdrant_storage
+    name: self-hosted-n8n_qdrant_storage
 
 networks:
   local-n8n:
