@@ -19,7 +19,7 @@
   - PostgreSQL: 5432
   - Qdrant: 6333
   - Ollama: 11434 (Windows host process, not a container)
-  - Persistent volumes: `n8n_storage`, `postgres_storage`, `qdrant_storage` (all declared `external: true`, so `docker compose down -v` will not delete them)
+  - Persistent volumes: `n8n_storage`, `postgres17_storage`, `qdrant_storage` (all declared `external: true`, so `docker compose down -v` will not delete them)
 
 - **Ollama configuration (critical)**
   - Ollama runs on the Windows host. From inside containers n8n must use `http://host.docker.internal:11434`.
