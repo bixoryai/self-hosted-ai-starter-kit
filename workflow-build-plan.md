@@ -72,7 +72,7 @@ docker compose restart n8n
 | Item | Detail |
 |------|--------|
 | **No workflow has been run end-to-end** | Everything verified so far is static (node types, model names, connectivity). The chat trigger is not a public webhook and `n8n execute` needs an Execute Workflow Trigger, so a real smoke test has to happen in the UI. |
-| **Qdrant collections need re-indexing** | The RAG workflow's embedding model moved from `mxbai-embed-large` (1024 dims) to `nomic-embed-text-v2-moe` (768 dims). Collections built with the old model cannot be queried until rebuilt. |
+| ~~Qdrant collections need re-indexing~~ **(resolved — no action needed)** | The embedding model moved to `nomic-embed-text-v2-moe` (768 dims). Inspection of the live Qdrant shows **no 1024-dim collections exist**: all 10 populated collections (138,247 points) are already 768-dim, matching the new model. The 14 remaining collections are 1536-dim (OpenAI) and hold 1 point between them. |
 | **Pinecone dependency** | `rag-chatbot-for-company-info.json` still targets Pinecone rather than the local Qdrant. |
 | **Credentials not wired** | The LinkedIn / Twitter / Facebook / Slack / Gemini workflows import cleanly but need credentials before they run. |
 
